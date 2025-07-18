@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Segunda Oportunidad - Marketplace Cuba</title>
+<style>
+/* -------------------- ESTILOS GENERALES -------------------- */
+:root {
+  --primary: #25D366;
+  --secondary: #ff4d6d;
+  --dark-bg: #121212;
+  --dark-card: #1e1e1e;
+  --dark-text: #eee;
+  --light-bg: #f9f9f9;
+  --light-card: #fff;
+  --light-text: #333;
+  --radius: 12px;
+  --shadow-light: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-dark: 0 4px 12px rgba(0,0,0,0.6);
+}
+body {
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background: var(--light-bg);
+  color: var(--light-text);
+}
+body.dark { background: var(--dark-bg); color: var(--dark-text); }
+header {
+  background: linear-gradient(45deg,var(--primary),#128C7E);
+  color: #fff;
+  padding: 15px;
+  text-align: center;
+  font-size: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+nav {
+  display:flex;justify-content:center;flex-wrap:wrap;
+  background: var(--light-card);padding:10px;
+}
+nav a {
+  text-decoration:none;color:var(--light-text);
+  margin:5px;font-weight:bold;padding:5px 10px;
+  border-radius:8px;
+}
+.hero { text-align:center;padding:1.5rem;background:linear-gradient(45deg,var(--primary),#128C7E);color:white;}
+section { padding: 1.5rem; }
+h2 { text-align:center;color:var(--secondary);margin-bottom:1rem;}
+.catalogo-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;}
+.card {
+  background:var(--light-card);border-radius:var(--radius);padding:10px;text-align:center;
+  box-shadow:var(--shadow-light);position:relative;cursor:pointer;
+}
+.card img { width:100%;height:150px;object-fit:cover;border-radius:var(--radius);}
+.card .estado {position:absolute;top:10px;left:10px;background:var(--secondary);color:#fff;padding:4px 6px;border-radius:6px;font-size:0.8rem;}
+button {
+  background:var(--primary);color:#fff;border:none;padding:10px;border-radius:var(--radius);
+  cursor:pointer;font-weight:bold;
+}
+.filters {display:flex;justify-content:center;gap:10px;margin:15px 0;}
+.filters button.active {background:var(--primary);color:white;}
+#search {width:90%;max-width:400px;margin:auto;display:block;padding:10px;border-radius:var(--radius);border:1px solid #ccc;}
+form {background:var(--light-card);padding:15px;border-radius:var(--radius);box-shadow:var(--shadow-light);max-width:600px;margin:auto;}
+form input,form select,form textarea {width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:var(--radius);}
+form input[type="file"]{border:none;}
+.preview-img {width:60px;height:60px;object-fit:cover;margin:5px;border-radius:8px;border:1px solid #ccc;}
+.floating-btn {
+  position:fixed;bottom:15px;right:15px;background:var(--primary);color:#fff;font-size:1.8rem;
+  width:55px;height:55px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  text-decoration:none;box-shadow:var(--shadow-light);
+}
+/* Modal Detalles */
+.modal {
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:10000;
+}
+.modal-content {
+  background:#fff;padding:20px;border-radius:var(--radius);max-width:400px;width:90%;
+  text-align:center;position:relative;
+}
+.modal-content img {width:100%;height:200px;object-fit:cover;border-radius:var(--radius);}
+.modal-content button.close {position:absolute;top:10px;right:10px;background:red;color:#fff;}
+</style>
+</head>
+<body>
+<header>
+  Segunda Oportunidad
+  <button id="themeToggle">🌙</button>
+</header>
+<nav>
+  <a href="#inicio">Inicio</a>
+  <a href="#catalogo">Catálogo</a>
+  <a href="#publicar">Publicar</a>
+  <a href="#historial">Historial</a>
+  <a href="#pacas">Pacas</a>
+  <a href="#proveedores">Proveedores</a>
+  <a href="#faq">FAQ</a>
+  <a href="#" id="adminLink">Admin</a>
+</nav>
+
+<section id="inicio" class="hero">
+  <h1>Bienvenido a Segunda Oportunidad</h1>
+  <p>El primer marketplace cubano para ropa de segunda mano. Somos intermediarios, no dueños de la mercancía.</p>
+</section>
+
+<!-- Búsqueda -->
+<section>
+  <input type="text" id="search" placeholder="Buscar prenda por nombre...">
+  <div class="filters">
+    <button data-filter="todos" class="active">Todos</button>
+    <button data-filter="hombre">Hombre</button>
+    <button data-filter="mujer">Mujer</button>
+    <button data-filter="niños">Niños</button>
+  </div>
+</section>
+
+<!-- Catálogo -->
+<section id="catalogo">
+  <h2>Catálogo</h2>
+  <div class="catalogo-grid" id="catalogo-list"></div>
+</section>
+
+<!-- Publicar -->
+<section id="publicar">
+  <h2>Publicar Prenda</h2>
+  <form id="formPublicar">
+    <input type="text" id="nombre" placeholder="Nombre de la prenda" required>
+    <input type="number" id="precio" placeholder="Precio" required>
+    <select id="moneda" required>
+      <option value="CUP">CUP</option>
+      <option value="USD">USD</option>
+      <option value="Transferencia">Transferencia</option>
+    </select>
+    <select id="categoria" required>
+      <option value="hombre">Hombre</option>
+      <option value="mujer">Mujer</option>
+      <option value="niños">Niños</option>
+    </select>
+    <input type="number" id="stock" placeholder="Cantidad disponible" required>
+    <input type="file" id="imagenes" accept="image/*" multiple required>
+    <div id="preview" style="display:flex;flex-wrap:wrap;"></div>
+    <textarea id="descripcion" placeholder="Detalles de la prenda"></textarea>
+    <button type="submit">Enviar para Aprobación</button>
+    <p id="msg" style="color:green;text-align:center;"></p>
+  </form>
+</section>
+
+<!-- Historial -->
+<section id="historial">
+  <h2>Historial</h2>
+  <div class="catalogo-grid" id="historial-list"></div>
+</section>
+
+<!-- Pacas -->
+<section id="pacas">
+  <h2>Pacas para Emprendedores</h2>
+  <p style="text-align:center;">Impulsa tu negocio con nuestras pacas. Llena el formulario y nos pondremos en contacto.</p>
+  <form id="formPacas">
+    <input type="text" placeholder="Nombre completo" required>
+    <input type="tel" placeholder="Teléfono" required>
+    <select required>
+      <option value="">Tipo de pacas</option>
+      <option value="hombre">Hombre</option>
+      <option value="mujer">Mujer</option>
+      <option value="mixto">Mixto</option>
+    </select>
+    <input type="number" placeholder="Cantidad de pacas" required>
+    <button type="submit">Solicitar</button>
+    <p id="msgPacas" style="color:green;text-align:center;"></p>
+  </form>
+</section>
+
+<!-- Proveedores -->
+<section id="proveedores" style="text-align:center;">
+  <h2>¿Eres Proveedor?</h2>
+  <p>Te ayudamos a promocionar tu mercancía con clientes reales. Contacta y conversemos sobre trabajar juntos.</p>
+  <a href="https://wa.me/5355703261" target="_blank"><button>Contactar por WhatsApp</button></a>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <h2>Preguntas Frecuentes</h2>
+  <details><summary>¿Cómo publico?</summary><p>Llenas el formulario y aprobamos antes de mostrarlo.</p></details>
+  <details><summary>¿Hacen envíos?</summary><p>Depende del proveedor, pregunta antes.</p></details>
+</section>
+
+<!-- Modal Detalle -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close" onclick="cerrarModal()">X</button>
+    <img id="modal-img">
+    <h3 id="modal-nombre"></h3>
+    <p id="modal-precio"></p>
+    <p id="modal-desc"></p>
+    <a id="whatsapp-btn" target="_blank"><button>Comprar por WhatsApp</button></a>
+  </div>
+</div>
+
+<script>
+let productos = JSON.parse(localStorage.getItem('productos')) || [];
+let pendientes = JSON.parse(localStorage.getItem('pendientes')) || [];
+
+const catalogo = document.getElementById('catalogo-list');
+const historial = document.getElementById('historial-list');
+
+function renderCatalogo() {
+  catalogo.innerHTML = '';
+  productos.forEach((p,i)=>{
+    catalogo.innerHTML += `<div class="card" onclick="verDetalle(${i})">
+      ${p.stock<=0?'<span class="estado">Agotado</span>':''}
+      <img src="${p.imagenes[0]}"><h4>${p.nombre}</h4><p>${p.precio} ${p.moneda}</p>
+    </div>`;
+  });
+  historial.innerHTML = catalogo.innerHTML;
+}
+renderCatalogo();
+
+// Publicar
+document.getElementById('imagenes').addEventListener('change',()=>{
+  const preview=document.getElementById('preview');preview.innerHTML='';
+  [...event.target.files].forEach(f=>{
+    const img=document.createElement('img');img.src=URL.createObjectURL(f);
+    img.className='preview-img';preview.appendChild(img);
+  });
+});
+
+document.getElementById('formPublicar').addEventListener('submit',e=>{
+  e.preventDefault();
+  const nombre=document.getElementById('nombre').value;
+  const precio=document.getElementById('precio').value;
+  const moneda=document.getElementById('moneda').value;
+  const categoria=document.getElementById('categoria').value;
+  const stock=document.getElementById('stock').value;
+  const descripcion=document.getElementById('descripcion').value;
+  const files=document.getElementById('imagenes').files;
+  if(files.length===0)return alert('Sube imágenes');
+  let imagenes=[];for(let f of files){imagenes.push(URL.createObjectURL(f));}
+  pendientes.push({nombre,precio,moneda,categoria,stock,descripcion,imagenes});
+  localStorage.setItem('pendientes',JSON.stringify(pendientes));
+  document.getElementById('msg').textContent='Enviado para aprobación';
+  e.target.reset();document.getElementById('preview').innerHTML='';
+});
+
+// Pacas
+document.getElementById('formPacas').addEventListener('submit',e=>{
+  e.preventDefault();
+  document.getElementById('msgPacas').textContent='Solicitud enviada. Te contactaremos por WhatsApp.';
+  e.target.reset();
+});
+
+// Modal
+function verDetalle(i){
+  const p=productos[i];
+  document.getElementById('modal-img').src=p.imagenes[0];
+  document.getElementById('modal-nombre').textContent=p.nombre;
+  document.getElementById('modal-precio').textContent=p.precio+' '+p.moneda;
+  document.getElementById('modal-desc').textContent=p.descripcion;
+  document.getElementById('whatsapp-btn').href=`https://wa.me/5355703261?text=Estoy interesado en ${p.nombre}`;
+  document.getElementById('modal').style.display='flex';
+}
+function cerrarModal(){document.getElementById('modal').style.display='none';}
+
+// Filtros
+document.querySelectorAll('.filters button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.filters button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const cat=b.dataset.filter;
+    const lista=cat==='todos'?productos:productos.filter(p=>p.categoria===cat);
+    catalogo.innerHTML='';
+    lista.forEach((p,i)=>catalogo.innerHTML+=`<div class="card" onclick="verDetalle(${i})"><img src="${p.imagenes[0]}"><h4>${p.nombre}</h4></div>`);
+  });
+});
+
+// Buscar
+document.getElementById('search').addEventListener('input',e=>{
+  const term=e.target.value.toLowerCase();
+  const filtrados=productos.filter(p=>p.nombre.toLowerCase().includes(term));
+  catalogo.innerHTML='';
+  filtrados.forEach((p,i)=>catalogo.innerHTML+=`<div class="card" onclick="verDetalle(${i})"><img src="${p.imagenes[0]}"><h4>${p.nombre}</h4></div>`);
+});
+
+// Dark mode
+document.getElementById('themeToggle').addEventListener('click',()=>document.body.classList.toggle('dark'));
+
+// Admin
+document.getElementById('adminLink').addEventListener('click',()=>{
+  const panel=document.createElement('div');
+  panel.innerHTML='<h3>Panel Admin</h3>';
+  pendientes.forEach((p,i)=>{
+    panel.innerHTML+=`${p.nombre}<button onclick="aprobar(${i})">Aprobar</button><button onclick="rechazar(${i})">Rechazar</button><br>`;
+  });
+  document.body.appendChild(panel);
+});
+function aprobar(i){productos.push(pendientes[i]);pendientes.splice(i,1);save();}
+function rechazar(i){pendientes.splice(i,1);save();}
+function save(){localStorage.setItem('productos',JSON.stringify(productos));localStorage.setItem('pendientes',JSON.stringify(pendientes));location.reload();}
+</script>
+</body>
+</html>
